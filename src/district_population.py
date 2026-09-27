@@ -17,11 +17,7 @@ class DistrictPopulation:
         return len(self.__population)
 
     def __repr__(self):
-        #just build a dictionary showing population by year
-        d = {}
-        for i, p in enumerate(self.__population):
-            d[str(self.__years[i])] = str(p)
-        return f"{self.__district_name} district population:" + str(d)
+        return f"{self.__district_name} district:"
 
     """Determine mean by either numpy or statistic module"""
     def mean(self, mode:str ='numpy'):
@@ -59,9 +55,25 @@ class DistrictPopulation:
     def standard_deviation(self, mode:str ='numpy'):
         match mode:
             case 'statistics':
-                result = statistics.stdev(self.__population) 
+                result = statistics.pstdev(self.__population) 
                                     
             #default mode is numpy
             case 'numpy' | _:
                 result = numpy.std(self.__population)
         return result
+    
+    """ computer anual growth"""
+    def year_on_year_growth(self):
+        prev_year_value=0
+        d = {}
+        for i, p in enumerate(self.__population):
+            if i ==0:
+                d[str(self.__years[i])] = "0.0%"
+            else:
+                d[str(self.__years[i])] = str(round(((p-prev_year_value)/prev_year_value)*100, 3))+'%'
+            prev_year_value = p    
+        return d
+
+    """ compound annual growth rate """
+    def compound_annual_growth_rate(self):
+        return ((self.__population[-1] / self.__population[0]) ** (1 / len(self.__years))) - 1
