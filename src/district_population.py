@@ -43,7 +43,7 @@ class DistrictPopulation:
     """Determine mean by either numpy or statistic module"""
     def variance(self, mode:str ='numpy'):
         match mode:
-            case 'statistics':
+            case 'statistics': 
                 result = statistics.variance(self.__population) 
                             
             #default mode is numpy
