@@ -161,3 +161,27 @@ class DistrictPopulation:
             scores[best] += 1
         #The model with the highest total score is returned.
         return max(scores, key=scores.get)
+
+    def __model(self, model:str):
+        """
+        Build and fit the chosen model on this district's population
+        """
+        match model:
+            case 'Fibonacci':
+                return FobonacciRatio().fit(self.__population)
+            case 'Cagr':    
+                return Cagr().fit(self.__population)
+            case 'Linear'| _:
+                return Linear().fit(self.__population)
+
+    def prediction(self, horizon:int, model:str='Linear') -> numpy.array:
+        """ 
+        Predicition method that allow switching between multiple models 
+        """
+        return self.__model(model).predict(horizon)
+
+    def fitted(self, model:str='Linear') -> numpy.array:
+        """
+        In-sample fitted values of the chosen model, one per year in this object
+        """
+        return self.__model(model).fitted()    
