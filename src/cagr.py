@@ -31,3 +31,11 @@ class Cagr(Forecaster):
         """   
         #apply formula, ((end_population/start_population)**1/length_of_data-1)-1  
         return ((self.__population[-1] / self.__population[0]) ** (1 / (len(self.__population) - 1))) - 1
+
+    def fitted(self) -> numpy.array:
+        """
+        Growth curve from the first value at the CAGR rate, for the training years.
+        It ends exactly on the last training value, because that is how the rate is defined.
+        """
+        cagr = self.calculate()
+        return self.__population[0] * (1 + cagr) ** numpy.arange(len(self.__population))
