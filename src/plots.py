@@ -10,7 +10,7 @@ from .validate import Validate
 
 def plot_district_forecasts(validate:Validate, years:list, all_populations:dict, train_size:int,
                             predictions:dict, future_years:list, future_forecasts:dict,
-                            ncols:int = 3) -> plt.Figure:
+                            ncols:int = 3, y_label:str = 'Population (thousands)') -> plt.Figure:
     """
     Plot actual, fitted and forecast values for every district in one figure of subplots,
     using each district's best model, with the train/test split marked.
@@ -26,6 +26,7 @@ def plot_district_forecasts(validate:Validate, years:list, all_populations:dict,
         future_forecasts: District name -> best-model forecast for future_years
             (bm_prediction in the notebook), fitted on the full series.
         ncols: Number of subplot columns.
+        y_label: Y-axis label, including the unit of the population data.
 
     Returns:
         The matplotlib Figure, so the caller can save or show it.
@@ -56,7 +57,9 @@ def plot_district_forecasts(validate:Validate, years:list, all_populations:dict,
         ax.plot(train_years, fitted, '-', color='tab:blue', label='Fitted (train)')
         ax.plot(test_years, predictions[district][best]['forecast'], 's--', color='tab:orange',
                 markersize=3, label='Forecast (test)')
-        ax.plot(future_years, future_forecasts[district], '--', color='tab:purple',
+        # Start the future line at the last actual value so it joins the actual series
+        ax.plot(numpy.append(years[-1], future_years), numpy.append(actual[-1], future_forecasts[district]),
+                '--', color='tab:purple',
                 label=f'Forecast ({future_years[0]}–{future_years[-1]})')
 
         ax.set_title(f'{district} (best: {best})')
@@ -68,10 +71,16 @@ def plot_district_forecasts(validate:Validate, years:list, all_populations:dict,
     for ax in axes[len(districts):]:
         ax.set_visible(False)
 
+    # With sharex, only the bottom row shows years. A subplot whose cell below is empty
+    # (Gulu, above the hidden sixth cell) would have none, so turn its labels back on.
+    for i, ax in enumerate(axes[:len(districts)]):
+        if i + ncols >= len(districts):
+            ax.tick_params(labelbottom=True)
+
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=len(labels), frameon=False)
     fig.suptitle('District population: actual, fitted and forecast (best model per district)')
     fig.supxlabel('Year')
-    fig.supylabel('Population')
+    fig.supylabel(y_label)
     fig.tight_layout(rect=(0, 0, 1, 0.91))
     return fig
