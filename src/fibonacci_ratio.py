@@ -1,7 +1,8 @@
 import numpy
-from forecaster import Forecaster
+from .forecaster import Forecaster
 
-""" Class for Fibonacci ratio forecast
+""" 
+Class for Fibonacci ratio forecast
      
      Formula: ratio  = Fn/Fn-1
 
@@ -32,7 +33,9 @@ class FobonacciRatio(Forecaster):
             self.__population = population
             return self
 
-    """ override of abstract class' predict method """
+    """
+    override of abstract class' predict method 
+    """
     def predict(self, horizon):
         fibonacciList = self.__generateFibonacciNumbers(horizon)
 
@@ -44,7 +47,10 @@ class FobonacciRatio(Forecaster):
             predictions.append(last_value * ratio)
 
         return numpy.array(predictions)
-    """ just a private method to help me generate fibonnaci numbers"""
+    
+    """ 
+    Just a private method to help me generate fibonnaci numbers
+    """
     def __generateFibonacciNumbers(self, n:int):
         fibonacciList = [1, 1]
         for _ in range(n):

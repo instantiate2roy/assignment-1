@@ -1,15 +1,18 @@
 import numpy
-from forecaster import Forecaster
+from .forecaster import Forecaster
 
-""" Class for compound annual growth rate forecast
-     cagr = ((ending_population/starting_population)**(1/n))-1
+""" 
+Class for compound annual growth rate forecast
+cagr = ((ending_population/starting_population)**(1/n))-1
 """
 class Cagr(Forecaster):
     def fit(self, population:numpy.array):
             self.__population = population
             return self
     
-    """ override of abstract class' predict method """
+    """ 
+    override of abstract class' predict method 
+    """
     def predict(self, horizon):
         last_value = self.__population[-1]
         first_value = self.__population[0]
