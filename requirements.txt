@@ -1,0 +1,11 @@
+# Python 3.10 or newer (the code uses match statements)
+numpy>=2.0
+pandas>=2.0
+matplotlib>=3.8
+
+# Running the notebook
+notebook>=7.0
+ipykernel>=6.0
+
+# Running the tests (pytest.ini uses pythonpath, which needs pytest 7+)
+pytest>=7.0
