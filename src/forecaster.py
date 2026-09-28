@@ -1,20 +1,21 @@
 from abc import ABC, abstractmethod
 import numpy
 
-"""
-base forecast class
-"""
 class Forecaster(ABC):
     """
-    Absract method for fit
+    base forecast class
     """
+    
     @abstractmethod
     def fit(self, population:numpy.array):
+        """
+        Absract method for fit
+        """
         pass
 
-    """
-    Abstract method for predict
-    """        
     @abstractmethod
-    def predict(self, horizon):
+    def predict(self, horizon) -> numpy.array:
+        """
+        Abstract method for predict
+        """         
         pass
