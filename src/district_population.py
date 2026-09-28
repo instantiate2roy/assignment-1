@@ -10,7 +10,7 @@ class DistrictPopulation:
     Main class for District Population
     """
         
-    def __init__(self, validate:Validate, years:numpy.array, population:numpy.array, district_name:str):
+    def __init__(self, validate:Validate, years:numpy.ndarray, population:numpy.ndarray, district_name:str):
         """ 
         constructor to assign properties and inject dependencies 
         """
@@ -18,6 +18,7 @@ class DistrictPopulation:
         self.__years = years
         #validate before assignment
         self.__validate.single_population(population)
+        self.__validate.years_match_population(years, population)
         self.__population =  population
         self.__district_name = district_name
 
@@ -40,7 +41,7 @@ class DistrictPopulation:
                  result = numpy.mean(self.__population)
         return result          
     
-    def median(self, mode:str ='numpy') -> str:
+    def median(self, mode:str ='numpy') -> float:
         """
         Determine median by either numpy or statistic module
         """
@@ -53,10 +54,11 @@ class DistrictPopulation:
                 result = numpy.median(self.__population)
         return result     
     
-    """
-    Determine variance by either numpy or statistic module
-    """
-    def variance(self, mode:str ='numpy'):
+    def variance(self, mode:str ='numpy') -> float:
+        """
+        Determine variance by either numpy (population, divides by N)
+        or statistics module (sample, divides by N - 1)
+        """
         match mode:
             case 'statistics': 
                 result = statistics.variance(self.__population.tolist()) 
@@ -68,11 +70,12 @@ class DistrictPopulation:
     
     def standard_deviation(self, mode:str ='numpy') -> float:
         """
-        Determine std by either numpy or statistic module
+        Determine std by either numpy (population, divides by N)
+        or statistics module (sample, divides by N - 1), matching variance()
         """
         match mode:
             case 'statistics':
-                result = statistics.pstdev(self.__population.tolist()) 
+                result = statistics.stdev(self.__population.tolist()) 
                                     
             #default mode is numpy
             case 'numpy' | _:
@@ -86,8 +89,9 @@ class DistrictPopulation:
         prev_year_value=0
         d = {}
         for i, p in enumerate(self.__population):
-            if i ==0:
-                d[str(self.__years[i])] = "0.0%"
+            #the first year has no previous year, and growth from 0 is undefined
+            if i == 0 or prev_year_value == 0:
+                d[str(self.__years[i])] = "N/A"
             else:
                 d[str(self.__years[i])] = str(round(((p-prev_year_value)/prev_year_value)*100, 3))+'%'
             prev_year_value = p    
@@ -100,39 +104,49 @@ class DistrictPopulation:
         #re-use method on Cagr class
         return Cagr().fit(self.__population).calculate()
         
-    def prediction(self, horizon:int, model:str='Linear') -> numpy.array:
-        """ 
-        Predicition method that allow switching between multiple models 
+    def __model(self, model:str):
+        """
+        Build and fit the chosen model on this district's population
         """
         match model:
             case 'Fibonacci':
-                model = FobonacciRatio().fit(self.__population)
+                return FobonacciRatio().fit(self.__population)
             case 'Cagr':    
-                model = Cagr().fit(self.__population)
+                return Cagr().fit(self.__population)
             case 'Linear'| _:
-                model = Linear().fit(self.__population)
+                return Linear().fit(self.__population)
 
-        return model.predict(horizon)        
+    def prediction(self, horizon:int, model:str='Linear') -> numpy.ndarray:
+        """ 
+        Predicition method that allow switching between multiple models 
+        """
+        return self.__model(model).predict(horizon)
 
-    def __mae(self, predicted:numpy.array,actual:numpy.array) -> float:
+    def fitted(self, model:str='Linear') -> numpy.ndarray:
+        """
+        In-sample fitted values of the chosen model, one per year in this object
+        """
+        return self.__model(model).fitted()
+
+    def __mae(self, predicted:numpy.ndarray,actual:numpy.ndarray) -> float:
         """ 
         MAE: mean absolute error, average error 
         """
         return numpy.mean(numpy.abs(actual - predicted))
 
-    def __rmse(self, predicted:numpy.array,actual:numpy.array) -> float:
+    def __rmse(self, predicted:numpy.ndarray,actual:numpy.ndarray) -> float:
         """
         RMSE:Root mean square error 
         """
         return numpy.sqrt(numpy.mean((actual - predicted) ** 2))
 
-    def __mape(self, predicted:numpy.array,actual:numpy.array) -> float:
+    def __mape(self, predicted:numpy.ndarray,actual:numpy.ndarray) -> float:
         """
         MAPE:mean absolute percentage error, average error as a percentage
         """  
         return numpy.mean(numpy.abs((actual - predicted) / actual)) * 100
 
-    def prediction_metrics(self, actual:numpy.array, predicted:numpy.array) -> dict:
+    def prediction_metrics(self, actual:numpy.ndarray, predicted:numpy.ndarray) -> dict:
         """ 
         Get all prediction metrics 
         """
@@ -161,27 +175,3 @@ class DistrictPopulation:
             scores[best] += 1
         #The model with the highest total score is returned.
         return max(scores, key=scores.get)
-
-    def __model(self, model:str):
-        """
-        Build and fit the chosen model on this district's population
-        """
-        match model:
-            case 'Fibonacci':
-                return FobonacciRatio().fit(self.__population)
-            case 'Cagr':    
-                return Cagr().fit(self.__population)
-            case 'Linear'| _:
-                return Linear().fit(self.__population)
-
-    def prediction(self, horizon:int, model:str='Linear') -> numpy.array:
-        """ 
-        Predicition method that allow switching between multiple models 
-        """
-        return self.__model(model).predict(horizon)
-
-    def fitted(self, model:str='Linear') -> numpy.array:
-        """
-        In-sample fitted values of the chosen model, one per year in this object
-        """
-        return self.__model(model).fitted()    
