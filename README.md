@@ -33,7 +33,7 @@ Then choose **Kernel > Restart Kernel and Run All Cells**.
 - **Mini-project 1** prints each table and saves the forecast figure as `district_forecasts.png`.
 - **Mini-project 2** stops at the interactive input cell and asks for a daytime load and a critical-equipment load in kWh. It then writes 30 days of demand data to `files/solar_data.csv`, and a second file with deliberately bad days to `files/solar_bad_data.csv`.
 
-Mini-project 1 uses no random numbers. Mini-project 2 generates its demand data with a fixed seed (36), so every run writes the same CSV files and gives the same results. Only the benchmark timings change from one machine to another.
+Mini-project 1 uses no random numbers. Mini-project 2 generates its demand data with a fixed seed (36), and its sensitivity analysis uses numpy's generator with a fixed seed (42), so every run writes the same CSV files and gives the same results. Only the benchmark timings change from one machine to another.
 
 To run the tests:
 
@@ -46,13 +46,15 @@ pytest
 | Path | Contents |
 |---|---|
 | `project1_population.ipynb` | Mini-project 1: statistics, growth rates, model comparison, forecasts, variance, figure, classroom planning, findings |
-| `project2_solar.ipynb` | Mini-project 2: determinant and condition number, interactive input, CSV generation, loop and vectorised solving, infeasible days, usage statistics, cost model, usage and cost chart |
+| `project2_solar.ipynb` | Mini-project 2: determinant and condition number, interactive input, CSV generation, loop and vectorised solving, infeasible days, usage statistics, cost model, usage and cost chart, and both extensions (diesel generator, sensitivity analysis) |
 | `src/district_population.py` | `DistrictPopulation`: statistics, growth rates, predictions and error metrics for one district |
 | `src/forecaster.py` | `Forecaster`: abstract base class for the forecasting models |
 | `src/linear.py`, `src/cagr.py`, `src/fibonacci_ratio.py` | The three forecasting models |
 | `src/plots.py` | Actual, fitted and forecast figure for every district |
 | `src/planning.py` | `ClassroomPlanner`: classroom estimates from population |
 | `src/microgrid.py` | `MicroGrid`: the two demand equations, their determinant and condition number, and the solver |
+| `src/hybrid_microgrid.py` | `HybridMicroGrid`: a `MicroGrid` subclass that adds a diesel generator and a night-time load (3×3 system) |
+| `src/sensitivity.py` | `SensitivityAnalysis`: Monte Carlo test of how ±5% errors in the demand readings move the dispatch |
 | `src/csv_generator.py` | `CsvGenerator`: seeded 30-day demand data with a weekly pattern and noise, optionally with bad days |
 | `src/validate.py` | Input validation for both mini-projects |
 | `files/` | CSV files written by mini-project 2 |
@@ -77,6 +79,8 @@ Population figures are in thousands. The full findings and limitations are at th
 - **Infeasible days:** in the file with deliberately bad data, 3 of the 30 days have a negative load reading and are rejected as invalid input. Another 3 days would need negative solar or battery output, so they are solved with non-negative least squares instead. That gives the closest supply to demand that uses no negative output, and it comes closer than simply setting the negative value to zero.
 - **Volatility:** the battery's daily output varies more in kWh (standard deviation 5.45 kWh against 2.63 kWh for solar), but solar varies more relative to its size (coefficient of variation 0.35 against 0.15). Relative to what each source supplies, solar is the more volatile one.
 - **Cost:** over the 30 days the clinic draws 1,298 kWh, 82% of it from the battery, for a total of UGX 515,723, or UGX 17,191 a day on average. The battery makes up 93% of the bill because it costs three times as much per kWh as solar. The two daily loads fix how much each source must supply, so lowering the bill needs a change to the system, such as more solar panels.
+- **Extension, diesel generator:** adding diesel and a night-time load gives a 3×3 system with a determinant of −19 and a condition number of 5.91, so it stays well-posed. If the new equation is the sum of the other two, the rank drops to 2 and there is either no solution or infinitely many, depending on the night-time load. A nearly dependent equation still solves, but its condition number is 2,146, and a 1% error in one load moves solar from 8 kWh to −94 kWh.
+- **Extension, sensitivity:** with random errors of up to ±5% in D1 and D2 (1,000 draws), solar moves by up to 28% and battery by up to 16%. The largest amplification of the demand error was 3.40, inside the limit of 5.83 set by the condition number. Solar is the least reliable figure, because it is a small difference between two large loads.
 
 ## AI-use declaration
 
@@ -85,7 +89,7 @@ I used AI tools while working on this project:
 - **ChatGPT (OpenAI):** explanations of Python concepts, including `.gitkeep` files, dunder methods, return type hints and docstrings, and a check of the CAGR formula.
 - **Claude (Anthropic):**
   - Mini-project 1: writing the forecast figure (`src/plots.py`), the `fitted()` methods, `ClassroomPlanner` (`src/planning.py`), the tests, the corrected loop and table in the best-model forecast cell, and the variance comparison cell. Explaining the errors I hit (import paths, autoreload, statistics results losing their decimals, a validation object shared between cells) and reviewing the project against the brief. Fixing bugs, including the relative imports in `src/`, the missing brackets in `Linear().fit`, the standard deviation mismatch, first-year growth, length checks, detached docstrings and type hints. Drafting parts of the notebook's markdown.
-  - Mini-project 2: writing the tests in `tests/test_microgrid.py`.
+  - Mini-project 2: writing the tests (`tests/test_microgrid.py`, `tests/test_hybrid_microgrid.py`, `tests/test_sensitivity.py`). Building both extensions: `HybridMicroGrid` (`src/hybrid_microgrid.py`), `SensitivityAnalysis` (`src/sensitivity.py`), and the extension cells and their discussion in the notebook. Reviewing the notebook's results, including finding that `scipy.optimize.nnls` returned a wrong answer for day 20.
   - Both: drafting this README and updating `requirements.txt`.
 
 I wrote the original code and analysis. I reviewed all AI-generated code and text, ran the notebook and tests myself, and corrected errors in the AI output, such as the rounding explanation and missing axis labels.
