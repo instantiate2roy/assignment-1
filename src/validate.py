@@ -36,3 +36,15 @@ class Validate:
         """Public method to validate year """ 
         if year not in range(year_range[0], year_range[1]+1):
             raise ValueError(f"Year should be between {year_range[0]} and {year_range[1]}!")
+
+    def check_energy_input(self, val:str) -> None:
+        """ validate energy input"""
+        if val is None or val == "":
+            raise ValueError('Energy Input in empty!')
+        try:
+            float(val)
+        except ValueError:
+            raise ValueError('Energy Input should a valid number!')
+        if float(val) < 0:
+            raise ValueError('Energy Input should not be Negative!')
+        
