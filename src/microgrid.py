@@ -10,7 +10,7 @@ class MicroGrid():
         #These wont change irrespective of object
         self.co_efficients = [[3, 2],[4, 1]]
 
-    def determinant(self) -> int:
+    def determinant(self) -> float:
         """evaluate the determinant"""
         det = numpy.linalg.det(self.co_efficients)
         #determinant can not be 0, 
