@@ -4,8 +4,11 @@ class MicroGrid():
     """
     Main MicroGrid class
     """
-    #These wont change irrespective of object
-    co_efficients = [[3, 2],[4, 1]]
+    
+    def __init__(self):
+        """ constructor to accept dependencies and define instance properties"""
+        #These wont change irrespective of object
+        self.co_efficients = [[3, 2],[4, 1]]
 
     def determinant(self) -> int:
         """evaluate the determinant"""
