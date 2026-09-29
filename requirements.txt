@@ -3,7 +3,13 @@ numpy>=2.0
 pandas>=2.0
 matplotlib>=3.8
 
-# Running the notebook
+# Mini-project 2: scipy.optimize.nnls for infeasible days (scipy 1.13+ supports numpy 2)
+scipy>=1.13
+
+# Mini-project 2: pandas DataFrame.style, used for the benchmark table, needs jinja2
+jinja2>=3.1.2
+
+# Running the notebooks
 notebook>=7.0
 ipykernel>=6.0
 
