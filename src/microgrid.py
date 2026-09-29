@@ -22,7 +22,7 @@ class MicroGrid():
         """evaluate the condition"""
         return numpy.linalg.cond(self.co_efficients)    
 
-    def solve(self, d1:float, d2:float):
+    def solve_day(self, d1:float, d2:float):
          """ Solve the simultaneous equation"""
          return numpy.linalg.solve(self.co_efficients, numpy.array([d1, d2]))
 
