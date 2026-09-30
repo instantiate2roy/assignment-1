@@ -1,4 +1,4 @@
-from fish_stock import FishStock
+from .fish_stock import FishStock
 
 class ClosedSeasonFishStock(FishStock):
     """FishStock with no harvesting during a closed season each year."""
