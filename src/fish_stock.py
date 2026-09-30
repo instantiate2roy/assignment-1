@@ -5,7 +5,7 @@ class FishStock:
     growth_rate = 0.4
     max_capacity = 10000
     start_capacity = 4000
-    harvest_portion = 0.0
+    harvest_portion = 0.0 
 
     def weekly_growth(self, current_stock:float) -> float:
         """weeks growth"""
