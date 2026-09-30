@@ -1,3 +1,7 @@
+import math
+import numbers
+
+
 class FishStock:
     """class to do analysis of fish stock
         harvesting =  N(t+1) = N(t) + r·N(t)·(1 − N(t)/K) − h·N(t)
@@ -5,7 +9,23 @@ class FishStock:
     growth_rate = 0.4
     max_capacity = 10000
     start_capacity = 4000
-    harvest_portion = 0.0
+
+    def __init__(self, harvest_portion:float = 0.0):
+        """ harvest_portion (h) is the share of the stock caught each week, from 0 to 1"""
+        self.harvest_portion = harvest_portion
+
+    @property
+    def harvest_portion(self) -> float:
+        return self.__harvest_portion
+
+    @harvest_portion.setter
+    def harvest_portion(self, value:float) -> None:
+        """ reject anything that is not a number from 0 (no fishing) to 1 (the whole stock)"""
+        if isinstance(value, bool) or not isinstance(value, numbers.Real) or not math.isfinite(value):
+            raise ValueError("Harvest portion must be a number!")
+        if not 0 <= value <= 1:
+            raise ValueError("Harvest portion must be between 0 and 1!")
+        self.__harvest_portion = value
 
     def weekly_growth(self, current_stock:float) -> float:
         """weeks growth"""
