@@ -1,4 +1,5 @@
 import numpy
+from scipy.signal import find_peaks
 
 class Region:
     months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -98,3 +99,20 @@ class Region:
         """
         cos = Region.cosine_similarity(a, b)
         return float(numpy.sqrt(1.0 - cos**2))
+
+    
+    def rainy_seasons(self, min_prominence: float = 50) -> dict:
+        """Detect rainy-season peaks and classify as unimodal or bimodal."""
+        x = numpy.asarray(self.rain_fall_data, dtype=float)
+        n = len(x)
+        padded = numpy.concatenate([x, x, x])         # treat the year as circular
+        idx, props = find_peaks(padded, prominence=min_prominence)
+        keep = (idx >= n) & (idx < 2 * n)            # peaks in the middle copy only
+        peaks = idx[keep] - n
+
+        return {
+            "region": self.region,
+            "peak_months": [self.months[i] for i in peaks],
+            "prominences": props["prominences"][keep].round().tolist(),
+            "pattern": "bimodal" if len(peaks) >= 2 else "unimodal",
+        }
