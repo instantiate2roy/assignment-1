@@ -3,7 +3,9 @@ numpy>=2.0
 pandas>=2.0
 matplotlib>=3.8
 
-# Mini-project 2: scipy.optimize.nnls for infeasible days (scipy 1.13+ supports numpy 2)
+# Mini-project 2: scipy.optimize.nnls for infeasible days
+# Mini-project 4: scipy.signal.find_peaks for rainy seasons, scipy.spatial.distance to check cosine similarity
+# (scipy 1.13+ supports numpy 2)
 scipy>=1.13
 
 # Mini-project 2: pandas DataFrame.style, used for the benchmark table, needs jinja2
