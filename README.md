@@ -7,6 +7,7 @@ Mini-projects from Assignment 1 (Advent 2026). Each one has its own notebook, wi
 | `project1_population.ipynb` | 1. District population forecaster: forecasts five Ugandan districts to 2029 and estimates the primary-school classrooms each one needs |
 | `project2_solar.ipynb` | 2. Solar micro-grid dispatch planner: splits a health centre's daily energy demand between solar panels and batteries |
 | `project3_fish_stock.ipynb` | 3. Lake Victoria fish stock and export risk model: tests whether a harvesting rate is sustainable and how risky the revenue is |
+| `project4_rainfall_pattern.ipynb` | 4. Rainfall pattern and crop suitability analyser: compares rainfall in Kampala, Gulu and Mbarara and advises which months suit which crops |
 
 ## Setup
 
@@ -28,6 +29,7 @@ Open each notebook from the project folder, so that `src` can be imported:
 jupyter notebook project1_population.ipynb
 jupyter notebook project2_solar.ipynb
 jupyter notebook project3_fish_stock.ipynb
+jupyter notebook project4_rainfall_pattern.ipynb
 ```
 
 Then choose **Kernel > Restart Kernel and Run All Cells**.
@@ -35,8 +37,9 @@ Then choose **Kernel > Restart Kernel and Run All Cells**.
 - **Mini-project 1** prints each table and saves the forecast figure as `district_forecasts.png`.
 - **Mini-project 2** stops at the interactive input cell and asks for a daytime load and a critical-equipment load in kWh. It then writes 30 days of demand data to `files/solar_data.csv`, and a second file with deliberately bad days to `files/solar_bad_data.csv`.
 - **Mini-project 3** prints each table and draws the stock trajectories and the revenue histogram. The Monte Carlo cells simulate 1,000 price paths each and take a few seconds.
+- **Mini-project 4** prints the statistics, crop classification and similarity tables, and draws the rainfall line chart and the crop suitability heatmap.
 
-Mini-project 1 uses no random numbers. Mini-project 2 generates its demand data with a fixed seed (36), and its sensitivity analysis uses numpy's generator with a fixed seed (42), so every run writes the same CSV files and gives the same results. Mini-project 3 seeds every price path (seed 50 for the single path, seeds 0 to 999 for the Monte Carlo paths), so it also gives the same results every run. Only the benchmark timings change from one machine to another.
+Mini-project 1 uses no random numbers. Mini-project 2 generates its demand data with a fixed seed (36), and its sensitivity analysis uses numpy's generator with a fixed seed (42), so every run writes the same CSV files and gives the same results. Mini-project 3 seeds every price path (seed 50 for the single path, seeds 0 to 999 for the Monte Carlo paths), so it also gives the same results every run. Mini-project 4 uses no random numbers. Only the benchmark timings change from one machine to another.
 
 To run the tests:
 
@@ -51,6 +54,7 @@ pytest
 | `project1_population.ipynb` | Mini-project 1: statistics, growth rates, model comparison, forecasts, variance, figure, classroom planning, findings |
 | `project2_solar.ipynb` | Mini-project 2: determinant and condition number, interactive input, CSV generation, loop and vectorised solving, infeasible days, usage statistics, cost model, usage and cost chart, and both extensions (diesel generator, sensitivity analysis) |
 | `project3_fish_stock.ipynb` | Mini-project 3: Fibonacci baseline, logistic growth model, price model, revenue statistics, risk classification and VaR, harvest-rate scenarios, charts, and the closed-season extension |
+| `project4_rainfall_pattern.ipynb` | Mini-project 4: region statistics, crop classification, cosine similarity checked against scipy, similarity and distance matrices, rainy-season detection, line chart, heatmap, advisory note for Mbarara farmers |
 | `src/district_population.py` | `DistrictPopulation`: statistics, growth rates, predictions and error metrics for one district |
 | `src/forecaster.py` | `Forecaster`: abstract base class for the forecasting models |
 | `src/linear.py`, `src/cagr.py`, `src/fibonacci_ratio.py` | The three forecasting models |
@@ -64,6 +68,8 @@ pytest
 | `src/closed_season_fish_stock.py` | `ClosedSeasonFishStock`: a `FishStock` subclass with no harvesting in weeks 1 to 8 of each year |
 | `src/price_model.py` | `PriceModel`: seeded, bounded random walk of the weekly fish price |
 | `src/risk_assesor.py` | `RiskAssessor`: Monte Carlo revenue simulation, risk class by coefficient of variation, 5% Value-at-Risk |
+| `src/region.py` | `Region`: one region's monthly rainfall, its statistics, similarity and distance measures, and rainy-season detection |
+| `src/crop_rule.py` | `CropRule`: monthly rainfall ranges for maize, beans and coffee, and each month's classification |
 | `src/validate.py` | Input validation for mini-projects 1 and 2 |
 | `files/` | CSV files written by mini-project 2 |
 | `tests/` | pytest tests for every mini-project, including invalid-input edge cases |
@@ -98,6 +104,14 @@ Population figures are in thousands. The full findings and limitations are at th
 - **Sustainable harvest:** h = 0.20 is the best rate. The stock settles at 5,000 t (half the capacity) and the weekly catch reaches the maximum sustainable yield of rK/4 = 1,000 t. Lighter harvesting (0.05 and 0.10) leaves the lake fuller but catches less, and h = 0.30 drains the stock to about 2,500 t and earns 512 billion UGX a year against 613 billion.
 - **Extension, closed season:** an 8-week break each year cuts 5-year revenue by 9% at h = 0.20 (from 3,174 to 2,891 billion UGX), because the stock is already at its most productive level. At h = 0.30 it raises revenue by 6% (from 2,432 to 2,579 billion UGX), because the break lets an overfished lake recover. The model has no breeding season, so it shows the cost of a closed season but not its main benefit.
 
+### Mini-project 4: Rainfall pattern and crop suitability analyser
+
+- **Rainfall:** Kampala is the wettest region (1,600 mm a year), then Gulu (1,388 mm) and Mbarara (1,040 mm). Gulu's rain is the most uneven, with a coefficient of variation of 0.61 against 0.37 for Kampala, because its dry season (December to February) is almost rainless.
+- **Cosine similarity, corrected:** last year's method used `math.cos()`, which is the cosine of an angle. Cosine similarity is the dot product of two rainfall vectors divided by the product of their lengths. The NumPy version matches `scipy.spatial.distance.cosine` (0.787 for Kampala and Gulu).
+- **Why cosine can mislead:** cosine similarity compares when the rain falls, not how much. Kampala and Mbarara score 0.89 although Kampala gets 54% more rain, and a region with double Kampala's rain every month scores a perfect 1.0. Pearson correlation gives the same pair only 0.21, and only Euclidean distance measures the amount: 250 mm between Kampala and Mbarara, and 493 mm between Kampala and its doubled copy.
+- **Rainy seasons:** Mbarara is bimodal (peaks in April and October) and Gulu is unimodal (peak in August), which matches Uganda's south-western and northern climate zones. Kampala comes out unimodal (peak in May) because its illustrative data has no clear dry break between seasons, although Kampala has two rainy seasons in reality.
+- **Advice:** Mbarara farmers should grow beans and plant in September, when the monthly rain (100 to 125 mm from September to November) sits inside the beans range.
+
 ## AI-use declaration
 
 I used AI tools while working on this project:
@@ -107,6 +121,7 @@ I used AI tools while working on this project:
   - Mini-project 1: writing the forecast figure (`src/plots.py`), the `fitted()` methods, `ClassroomPlanner` (`src/planning.py`), the tests, the corrected loop and table in the best-model forecast cell, and the variance comparison cell. Explaining the errors I hit (import paths, autoreload, statistics results losing their decimals, a validation object shared between cells) and reviewing the project against the brief. Fixing bugs, including the relative imports in `src/`, the missing brackets in `Linear().fit`, the standard deviation mismatch, first-year growth, length checks, detached docstrings and type hints. Drafting parts of the notebook's markdown.
   - Mini-project 2: writing the tests (`tests/test_microgrid.py`, `tests/test_hybrid_microgrid.py`, `tests/test_sensitivity.py`). Building both extensions: `HybridMicroGrid` (`src/hybrid_microgrid.py`), `SensitivityAnalysis` (`src/sensitivity.py`), and the extension cells and their discussion in the notebook. Reviewing the notebook's results, including finding that `scipy.optimize.nnls` returned a wrong answer for day 20.
   - Mini-project 3: writing the tests in `tests/test_fish_stock.py`, and finding the import that broke `ClosedSeasonFishStock`. Fixing `RiskAssessor` for a zero catch, validating the harvest portion in `FishStock`, and separating total from annual revenue.
+  - Mini-project 4: writing the tests in `tests/test_rainfall.py`, adding input validation to `Region` and `CropRule`, and drafting the Findings & Limitations section.
   - All: drafting this README and updating `requirements.txt`.
 
 I wrote the original code and analysis. I reviewed all AI-generated code and text, ran the notebook and tests myself, and corrected errors in the AI output, such as the rounding explanation and missing axis labels.

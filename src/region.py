@@ -3,11 +3,37 @@ from scipy.signal import find_peaks
 
 class Region:
     months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
-    def __init__(self, rain_fall:numpy.array, region:str  ,year:int = '2026') ->None:
+    def __init__(self, rain_fall:numpy.array, region:str  ,year:str = '2026') ->None:
         """ Initialize instance variables"""
-        self.rain_fall_data = rain_fall
-        self.region = region
+        self.rain_fall_data = self.validate_rain_fall(rain_fall)
+        self.region = self.validate_region(region)
         self.year = year
+
+    @classmethod
+    def validate_rain_fall(cls, rain_fall) -> numpy.ndarray:
+        """
+        Monthly rainfall must be 12 numbers (January to December), each finite and not negative
+        """
+        values = numpy.asarray(rain_fall)
+        if values.ndim != 1 or len(values) != len(cls.months):
+            raise ValueError(f"Rainfall needs exactly {len(cls.months)} values, one per month!")
+        #integers and floats only: rejects text, None and True/False
+        if values.dtype.kind not in 'iuf':
+            raise ValueError("Rainfall values must be numbers!")
+        if not numpy.all(numpy.isfinite(values)):
+            raise ValueError("Rainfall values must be finite numbers!")
+        if numpy.any(values < 0):
+            raise ValueError("Rainfall cannot be negative!")
+        return values
+
+    @staticmethod
+    def validate_region(region) -> str:
+        """
+        Region name must be a non-empty string
+        """
+        if not isinstance(region, str) or not region.strip():
+            raise ValueError("Region name must be a non-empty string!")
+        return region
 
     def __str__(self):
         print(self.region)
@@ -48,6 +74,9 @@ class Region:
         """
         co efficient of variation
         """
+        #a region with no rain at all has no average to compare the spread with
+        if self.mean() == 0:
+            raise ValueError("Coefficient of variation is undefined when there is no rain!")
         return self.std()/self.mean()
 
     @staticmethod
