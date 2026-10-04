@@ -8,6 +8,9 @@ matplotlib>=3.8
 # (scipy 1.13+ supports numpy 2)
 scipy>=1.13
 
+# Mini-project 4 extension: downloads 2016-2025 rainfall from the NASA POWER API
+requests>=2.31
+
 # Mini-project 2: pandas DataFrame.style, used for the benchmark table, needs jinja2
 jinja2>=3.1.2
 

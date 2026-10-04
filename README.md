@@ -8,6 +8,7 @@ Mini-projects from Assignment 1 (Advent 2026). Each one has its own notebook, wi
 | `project2_solar.ipynb` | 2. Solar micro-grid dispatch planner: splits a health centre's daily energy demand between solar panels and batteries |
 | `project3_fish_stock.ipynb` | 3. Lake Victoria fish stock and export risk model: tests whether a harvesting rate is sustainable and how risky the revenue is |
 | `project4_rainfall_pattern.ipynb` | 4. Rainfall pattern and crop suitability analyser: compares rainfall in Kampala, Gulu and Mbarara and advises which months suit which crops |
+| `project5_taxi_route.ipynb` | 5. Taxi route revenue, pricing and fleet planner: forecasts demand on three matatu routes out of Kampala and sizes each route's fleet |
 
 ## Setup
 
@@ -30,6 +31,7 @@ jupyter notebook project1_population.ipynb
 jupyter notebook project2_solar.ipynb
 jupyter notebook project3_fish_stock.ipynb
 jupyter notebook project4_rainfall_pattern.ipynb
+jupyter notebook project5_taxi_route.ipynb
 ```
 
 Then choose **Kernel > Restart Kernel and Run All Cells**.
@@ -37,9 +39,10 @@ Then choose **Kernel > Restart Kernel and Run All Cells**.
 - **Mini-project 1** prints each table and saves the forecast figure as `district_forecasts.png`.
 - **Mini-project 2** stops at the interactive input cell and asks for a daytime load and a critical-equipment load in kWh. It then writes 30 days of demand data to `files/solar_data.csv`, and a second file with deliberately bad days to `files/solar_bad_data.csv`.
 - **Mini-project 3** prints each table and draws the stock trajectories and the revenue histogram. The Monte Carlo cells simulate 1,000 price paths each and take a few seconds.
-- **Mini-project 4** prints the statistics, crop classification and similarity tables, and draws the rainfall line chart and the crop suitability heatmap.
+- **Mini-project 4** prints the statistics, crop classification and similarity tables, and draws the rainfall line chart and the crop suitability heatmap. Its extension downloads 2016–2025 monthly rainfall from the NASA POWER API and saves it to `files/<region>_rain_data.csv`, so it needs an internet connection.
+- **Mini-project 5** prints the revenue, equilibrium, backtesting, forecast and fleet tables, and draws the day 11 forecast and the 60-day seasonal comparison.
 
-Mini-project 1 uses no random numbers. Mini-project 2 generates its demand data with a fixed seed (36), and its sensitivity analysis uses numpy's generator with a fixed seed (42), so every run writes the same CSV files and gives the same results. Mini-project 3 seeds every price path (seed 50 for the single path, seeds 0 to 999 for the Monte Carlo paths), so it also gives the same results every run. Mini-project 4 uses no random numbers. Only the benchmark timings change from one machine to another.
+Mini-project 1 uses no random numbers. Mini-project 2 generates its demand data with a fixed seed (36), and its sensitivity analysis uses numpy's generator with a fixed seed (42), so every run writes the same CSV files and gives the same results. Mini-project 3 seeds every price path (seed 50 for the single path, seeds 0 to 999 for the Monte Carlo paths), so it also gives the same results every run. Mini-project 4 uses no random numbers. Mini-project 5 simulates its 60 days with numpy's generator and a fixed seed (42). Only the benchmark timings change from one machine to another.
 
 To run the tests:
 
@@ -54,7 +57,8 @@ pytest
 | `project1_population.ipynb` | Mini-project 1: statistics, growth rates, model comparison, forecasts, variance, figure, classroom planning, findings |
 | `project2_solar.ipynb` | Mini-project 2: determinant and condition number, interactive input, CSV generation, loop and vectorised solving, infeasible days, usage statistics, cost model, usage and cost chart, and both extensions (diesel generator, sensitivity analysis) |
 | `project3_fish_stock.ipynb` | Mini-project 3: Fibonacci baseline, logistic growth model, price model, revenue statistics, risk classification and VaR, harvest-rate scenarios, charts, and the closed-season extension |
-| `project4_rainfall_pattern.ipynb` | Mini-project 4: region statistics, crop classification, cosine similarity checked against scipy, similarity and distance matrices, rainy-season detection, line chart, heatmap, advisory note for Mbarara farmers |
+| `project4_rainfall_pattern.ipynb` | Mini-project 4: region statistics, crop classification, cosine similarity checked against scipy, similarity and distance matrices, rainy-season detection, line chart, heatmap, advisory note for Mbarara farmers, findings and limitations, and the NASA POWER extension with box plots per month |
+| `project5_taxi_route.ipynb` | Mini-project 5: route revenue statistics, supply and demand equilibrium, walk-forward backtesting with a tuned α, day 11 forecast, fleet planning, and the 60-day seasonal extension |
 | `src/district_population.py` | `DistrictPopulation`: statistics, growth rates, predictions and error metrics for one district |
 | `src/forecaster.py` | `Forecaster`: abstract base class for the forecasting models |
 | `src/linear.py`, `src/cagr.py`, `src/fibonacci_ratio.py` | The three forecasting models |
@@ -70,8 +74,12 @@ pytest
 | `src/risk_assesor.py` | `RiskAssessor`: Monte Carlo revenue simulation, risk class by coefficient of variation, 5% Value-at-Risk |
 | `src/region.py` | `Region`: one region's monthly rainfall, its statistics, similarity and distance measures, and rainy-season detection |
 | `src/crop_rule.py` | `CropRule`: monthly rainfall ranges for maize, beans and coffee, and each month's classification |
+| `src/rain_data.py` | `RainData`: downloads monthly rainfall from NASA POWER, saves it as CSV and loads it by year |
+| `src/matrix_equation.py` | `MatrixEquation`: a 2×2 linear system with its determinant, condition number and solver, shared by `MicroGrid` and the taxi equilibrium |
+| `src/route.py` | `Route`: one route's passenger counts and fare, with daily and total revenue and their statistics |
+| `src/moving_average.py`, `src/exponential_smoothing.py`, `src/seasonal_naive.py` | The taxi demand forecasters, subclasses of `Forecaster` |
 | `src/validate.py` | Input validation for mini-projects 1 and 2 |
-| `files/` | CSV files written by mini-project 2 |
+| `files/` | CSV files written by mini-projects 2 and 4 |
 | `tests/` | pytest tests for every mini-project, including invalid-input edge cases |
 
 ## Findings
@@ -111,6 +119,15 @@ Population figures are in thousands. The full findings and limitations are at th
 - **Why cosine can mislead:** cosine similarity compares when the rain falls, not how much. Kampala and Mbarara score 0.89 although Kampala gets 54% more rain, and a region with double Kampala's rain every month scores a perfect 1.0. Pearson correlation gives the same pair only 0.21, and only Euclidean distance measures the amount: 250 mm between Kampala and Mbarara, and 493 mm between Kampala and its doubled copy.
 - **Rainy seasons:** Mbarara is bimodal (peaks in April and October) and Gulu is unimodal (peak in August), which matches Uganda's south-western and northern climate zones. Kampala comes out unimodal (peak in May) because its illustrative data has no clear dry break between seasons, although Kampala has two rainy seasons in reality.
 - **Advice:** Mbarara farmers should grow beans and plant in September, when the monthly rain (100 to 125 mm from September to November) sits inside the beans range.
+- **Extension, real rainfall:** NASA POWER data for 2016–2025 averages 1,434 mm a year in Kampala, 1,412 mm in Gulu and 1,310 mm in Mbarara, and single years range widely (Mbarara from 880 mm to 1,904 mm). Averaged over the ten years, Kampala comes out bimodal (peaks in April and November), which matches its real climate, unlike the illustrative data.
+
+### Mini-project 5: Taxi route revenue, pricing and fleet planner
+
+- **Revenue:** over the 10 days, Kampala–Entebbe earns the most (UGX 3,390,000, UGX 339,000 a day), then Kampala–Mukono (UGX 1,560,000) and Kampala–Ntinda (UGX 948,000).
+- **Fare:** on the Ntinda route, supply meets demand at a fare of UGX 2,200 and 76 passengers per trip-hour. The current fare of UGX 2,000 is below that, so 80 passengers want a seat for every 70 offered, a shortage of 10.
+- **Forecasting:** in walk-forward backtesting over days 4 to 10, simple exponential smoothing had the lowest error on every route (MAE 3.7 to 5.9 passengers), and the grid search chose α = 1.0. That is the same as forecasting each day as the day before.
+- **Fleet:** the day 11 forecasts are 45, 64 and 50 passengers. With a 15% buffer, one vehicle (112 seats a day) covers each route, at 40% to 57% of its seats.
+- **Extension, weekly pattern:** on 60 simulated days with a busy Friday and a quiet Sunday, the seasonal-naive forecaster was off by 2.2 to 3.0 passengers a day, against 7.9 to 11.3 for the 3-day moving average.
 
 ## AI-use declaration
 
@@ -121,7 +138,8 @@ I used AI tools while working on this project:
   - Mini-project 1: writing the forecast figure (`src/plots.py`), the `fitted()` methods, `ClassroomPlanner` (`src/planning.py`), the tests, the corrected loop and table in the best-model forecast cell, and the variance comparison cell. Explaining the errors I hit (import paths, autoreload, statistics results losing their decimals, a validation object shared between cells) and reviewing the project against the brief. Fixing bugs, including the relative imports in `src/`, the missing brackets in `Linear().fit`, the standard deviation mismatch, first-year growth, length checks, detached docstrings and type hints. Drafting parts of the notebook's markdown.
   - Mini-project 2: writing the tests (`tests/test_microgrid.py`, `tests/test_hybrid_microgrid.py`, `tests/test_sensitivity.py`). Building both extensions: `HybridMicroGrid` (`src/hybrid_microgrid.py`), `SensitivityAnalysis` (`src/sensitivity.py`), and the extension cells and their discussion in the notebook. Reviewing the notebook's results, including finding that `scipy.optimize.nnls` returned a wrong answer for day 20.
   - Mini-project 3: writing the tests in `tests/test_fish_stock.py`, and finding the import that broke `ClosedSeasonFishStock`. Fixing `RiskAssessor` for a zero catch, validating the harvest portion in `FishStock`, and separating total from annual revenue.
-  - Mini-project 4: writing the tests in `tests/test_rainfall.py`, adding input validation to `Region` and `CropRule`, and drafting the Findings & Limitations section.
+  - Mini-project 4: writing the tests in `tests/test_rainfall.py`, adding input validation to `Region` and `CropRule`, and drafting the Findings & Limitations section. Writing the tests in `tests/test_rain_data.py`.
+  - Mini-project 5: writing the tests in `tests/test_taxi_route.py`.
   - All: drafting this README and updating `requirements.txt`.
 
 I wrote the original code and analysis. I reviewed all AI-generated code and text, ran the notebook and tests myself, and corrected errors in the AI output, such as the rounding explanation and missing axis labels.
