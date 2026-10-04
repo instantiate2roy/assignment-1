@@ -1,4 +1,4 @@
-from forecaster import Forecaster
+from .forecaster import Forecaster
 import numpy
 
 class MovingAverage(Forecaster):

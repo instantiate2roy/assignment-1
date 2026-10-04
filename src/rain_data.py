@@ -1,6 +1,7 @@
 import requests
 import csv
 import numpy
+from pathlib import Path
 
 class RainData:
     """Class to import rain data"""
@@ -39,7 +40,7 @@ class RainData:
         except requests.RequestException as e:
             #If http request fail, attemp to load data from old files 
             print(f"Failed to fetch data for {self.__location}: {e}")
-            if not self.__file_location.exists():
+            if not Path(self.__file_location).exists():
                 raise FileNotFoundError(f"No saved data for {self.__location} at {self.__file_location}")
         
         print("Loading from Files..........")
